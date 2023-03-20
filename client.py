@@ -183,7 +183,7 @@ if __name__ == "__main__":
         int(port)
     
     # Arm state to keep track and manipulate the arm
-    arm_state = ArmState(0, 0, 3, 0, (0, 10), (0, 10), (3, 10), (-30, 30))
+    arm_state = ArmState(0, 10, 10, -30, (0, 10), (0, 10), (3, 10), (-30, -90))
 
     # Commands for manipulating the arm (these can be replaced by something more elaborate later)
     
