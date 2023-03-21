@@ -59,6 +59,8 @@ class ArmState:
         y: int,  # Initial y value
         z: int,  # Initial z value
         alpha: int,  # Initial alpha value
+        claw_open: bool,  # Initial claw state
+        claw_rotate: int,  # Initial claw angle value
         x_range: typing.Tuple[int, int],
         y_range: typing.Tuple[int, int],
         z_range: typing.Tuple[int, int],
@@ -69,6 +71,8 @@ class ArmState:
         self._y = y
         self._z = z
         self._alpha = alpha
+        self._claw_open = claw_open
+        self._claw_rotate = claw_rotate
         
         # Set coordinate ranges
         self.x_range = x_range
@@ -122,6 +126,18 @@ class ArmState:
         
         return self._alpha
 
+    @property
+    def claw_open(self):
+        """Claw state of the gripper"""
+        
+        return self._claw_open
+
+    @property
+    def claw_rotate(self):
+        """Rotation angle of the gripper"""
+        
+        return self._claw_rotate
+
     @alpha.setter
     def alpha(self, alpha: int):
         
@@ -139,6 +155,13 @@ class ArmState:
         if curr_val is not None:
             setattr(self, coord, curr_val + mod_val)
             AK.setPitchRangeMoving((self.x, self.y, self.z), self.alpha, self.alpha_range[0], self.alpha_range[1], 1500)
+            
+            if self.claw_open:
+                Board.setBusServoPulse(1, 220, 500)
+            else:
+                Board.setBusServoPulse(1, 500, 500)
+
+            Board.setBusServoPulse(2, self.claw_rotate, 500)
 
 
 def run_client(
@@ -146,6 +169,7 @@ def run_client(
 ):
     
     while True:
+        time.sleep(0.01)
         try:
             res = socket.recv(flags=zmq.NOBLOCK)  # Asynchronous communication using noblock
             topic, msg = res.decode("utf-8").split()
@@ -155,8 +179,9 @@ def run_client(
             Command.run_command(cmd_id, args)
 
         except zmq.Again as e:
+            pass
             # If not received, do something else
-            print("No new message received yet")
+            # print("No new message received yet")
     
     
 
@@ -183,7 +208,7 @@ if __name__ == "__main__":
         int(port)
     
     # Arm state to keep track and manipulate the arm
-    arm_state = ArmState(0, 10, 10, -30, (0, 10), (0, 10), (3, 10), (-30, -90))
+    arm_state = ArmState(0, 10, 10, -90, False, 500, (0, 10), (0, 10), (3, 10), (-90, 0))
 
     # Commands for manipulating the arm (these can be replaced by something more elaborate later)
     
