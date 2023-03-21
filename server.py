@@ -35,7 +35,7 @@ class JoydeviceBinder:
         topic: str,
     ):
         
-        cls.topic = topic
+        cls._topic_name = topic
     
     @classmethod
     def get_bind(

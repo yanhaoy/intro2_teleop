@@ -205,3 +205,5 @@ if __name__ == "__main__":
     topicfilter = "control"  # This should match the server's topic name
     socket.setsockopt(zmq.SUBSCRIBE, bytes(topicfilter, "utf-8"))
 
+    run_client(socket)
+    
