@@ -34,7 +34,7 @@ socket.connect(
 topicfilter = "control"  # This should match the server's topic name
 socket.setsockopt(zmq.SUBSCRIBE, bytes(topicfilter, "utf-8"))
 
-x, y, z, r, c = 0, 10, 10, 0, False
+x, y, z, r, c = 0, 10, 10, 500, False
 
 while True:
     time.sleep(0.5)
@@ -56,9 +56,9 @@ while True:
         elif message == "f":
             z -= 1
         elif message == "q":
-            r += 1
+            r += 10
         elif message == "e":
-            r -= 1
+            r -= 10
         elif message == "t":
             c = True
         elif message == "g":
