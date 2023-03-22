@@ -64,6 +64,7 @@ class ArmState:
         x_range: typing.Tuple[int, int],
         y_range: typing.Tuple[int, int],
         z_range: typing.Tuple[int, int],
+        claw_range: typing.Tuple[int, int],
         alpha_range: typing.Tuple[int, int],
     ):
         # Set coordinates
@@ -78,6 +79,7 @@ class ArmState:
         self.x_range = x_range
         self.y_range = y_range
         self.z_range = z_range
+        self.claw_range = claw_range
         self.alpha_range = alpha_range
     
     def __repr__(self):
@@ -131,12 +133,24 @@ class ArmState:
         """Claw state of the gripper"""
         
         return self._claw_open
+    
+    @claw_open.setter
+    def claw_open(self, _: int):
+        
+        self._claw_open = not self._claw_open
 
     @property
     def claw_rotate(self):
         """Rotation angle of the gripper"""
         
         return self._claw_rotate
+    
+    @claw_rotate.setter
+    def claw_rotate(self, claw_angle: int):
+        
+        if self.claw_range[0] <= claw_angle <= self.claw_range[1]:
+            self._claw_rotate = claw_angle
+        
 
     @alpha.setter
     def alpha(self, alpha: int):
@@ -208,15 +222,16 @@ if __name__ == "__main__":
         int(port)
     
     # Arm state to keep track and manipulate the arm
-    arm_state = ArmState(0, 10, 10, -90, False, 500, (0, 10), (0, 10), (3, 10), (-90, 0))
+    arm_state = ArmState(0, 10, 10, -90, False, 500, (0, 10), (0, 10), (3, 10), (-30, 30), (-90, 0))
 
     # Commands for manipulating the arm (these can be replaced by something more elaborate later)
     
-    Command(0, lambda move: command_wrapper(arm_state, move, "x"))
-    Command(1, lambda move: command_wrapper(arm_state, move, "y"))
-    Command(2, lambda move: command_wrapper(arm_state, move, "alpha"))
-    Command(3, lambda direction: arm_state.set_coord("z", 0 if direction == "f" else -1))
-    Command(4, lambda direction: arm_state.set_coord("z", 0 if direction == "f" else 1))
+    Command(0, lambda move: command_wrapper(arm_state, move, "x"))  # Move in +/- x direction
+    Command(1, lambda move: command_wrapper(arm_state, move, "y"))  # Move in +/- y direction
+    Command(2, lambda move: command_wrapper(arm_state, move, "claw_rotate"))  # Rotate gripper
+    Command(3, lambda direction: arm_state.set_coord("z", 0 if direction == "f" else -1))  # Move in -z direction
+    Command(4, lambda direction: arm_state.set_coord("z", 0 if direction == "f" else 1))  # Move in +z direction
+    Command(5, lambda _: arm_state.set_coord("claw_open", _))  # Toggle opening and closing claw
 
     # Socket to talk to server
     context = zmq.Context()

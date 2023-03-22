@@ -48,9 +48,35 @@ class JoydeviceBinder:
         return cls._binds.get((event.type, event_id))       
     
     def create_msg(self):
-        """Create message for the """
+        """Create message the message that will be sent to the client"""
 
         return [bytes(self._topic_name + " " + str(self.cmd_id[i]) + msg, "utf-8") for i, msg in enumerate(self.msg_cb(self.event_id))]
+
+
+class JoydeviceAxisBinder(JoydeviceBinder):
+    """Bind and regulate joyaxis from an xbox controller"""
+    
+    def __init__(
+        self,
+        event_id: int,
+        cmd_id: typing.Tuple[int],
+        msg_cb: typing.Callable,
+        cb_delay: float = 0.5,
+    ):
+        
+        self.cb_delay = cb_delay  # By how much do we want to wait between message callbacks
+        self._cb_timer = time.time()  # Timer to keep track of last message sent
+        super().__init__(event_id, pygame.JOYAXISMOTION, cmd_id, msg_cb)
+    
+    def create_msg(self):
+        """Create and regulate message sending for joysticks"""
+        
+        # Check if enough time has passed before passing message
+        curr_time = time.time()
+        if curr_time - self._cb_timer > self.cb_delay:
+            self._cb_timer = curr_time    
+            return super().create_msg()
+        return []
 
 
 def run_server(
@@ -83,7 +109,7 @@ def run_server(
 
 # Helper functions/binds for controllers
 
-def read_axis(
+def read_axis_horz(
     event_id: int,
     joydevice: pygame.joystick.Joystick,
 ) -> typing.List[str]:
@@ -95,6 +121,20 @@ def read_axis(
     elif value > 0:
         return ["f"]
     return ["b"]
+
+
+def read_axis_vert(
+    event_id: int,
+    joydevice: pygame.joystick.Joystick,
+) -> typing.List[str]:
+    """Shorthand to send message from axis component"""
+    
+    value = joydevice.get_axis(event_id)
+    if abs(value) < .2:
+        return ["n"]
+    elif value > 0:
+        return ["b"]
+    return ["f"]
 
 
 def read_hat(
@@ -114,6 +154,14 @@ def read_hat(
             msgs.append("b")
 
     return msgs
+
+
+def read_button(
+    event_id: int,
+    joydevice: pygame.joystick.Joystick,
+) -> typing.List[str]:
+    
+    return ["f"]
 
 
 def shutdown_system():
@@ -154,18 +202,21 @@ if __name__ == "__main__":
     
     # Joydevice binds
     
-    # Left stick (control pitch angle)
-    JoydeviceBinder(1, pygame.JOYAXISMOTION, (2,), lambda event_id: read_axis(event_id, joystick))  
+    # Left stick (control gripper angle)
+    JoydeviceAxisBinder(1, (2,), lambda event_id: read_axis_horz(event_id, joystick), cb_delay = 0.25)
     
     # Right stick (control x, y position)
-    JoydeviceBinder(2, pygame.JOYAXISMOTION, (0,), lambda event_id: read_axis(event_id, joystick))
-    JoydeviceBinder(3, pygame.JOYAXISMOTION, (1,), lambda event_id: read_axis(event_id, joystick))
+    JoydeviceAxisBinder(2, (0,), lambda event_id: read_axis_vert(event_id, joystick), cb_delay = 0.4)
+    JoydeviceAxisBinder(3, (1,), lambda event_id: read_axis_horz(event_id, joystick), cb_delay = 0.4)
     
     # Triggers (control z position)
-    JoydeviceBinder(4, pygame.JOYAXISMOTION, (3,), lambda event_id: read_axis(event_id, joystick))
-    JoydeviceBinder(5, pygame.JOYAXISMOTION, (4,), lambda event_id: read_axis(event_id, joystick))
+    JoydeviceAxisBinder(4, (3,), lambda event_id: read_axis_horz(event_id, joystick), cb_delay = 0.2)
+    JoydeviceAxisBinder(5, (4,), lambda event_id: read_axis_horz(event_id, joystick), cb_delay = 0.2)
     
-    # D-pad
+    # D-pad (control x, y position)
     JoydeviceBinder(0, pygame.JOYHATMOTION, (0, 1), lambda event_id: read_hat(event_id, joystick))
+    
+    # A button (Toggle claw)
+    JoydeviceBinder(0, pygame.JOYBUTTONDOWN, (5,), lambda event_id: read_button(event_id, joystick))
 
     run_server(socket)  # Run server
