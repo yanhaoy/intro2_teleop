@@ -27,7 +27,7 @@ context = zmq.Context()
 socket = context.socket(zmq.SUB)
 socket.setsockopt(zmq.CONFLATE, 1)  # Take only the last element
 socket.connect(
-    "tcp://192.168.149.39:%s" % port
+    "tcp://192.168.31.246:%s" % port
 )  # I hope this IP is constant, otherwise change it to your laptop's IP
 
 # Set topic filter
@@ -66,6 +66,8 @@ while True:
         else:
             continue
 
+        print("current state: ", x, y, z, r, c)
+
         AK.setPitchRangeMoving((x, y, z), -90, -30, -90, 1500)
         if c:
             Board.setBusServoPulse(1, 200, 500)
@@ -75,4 +77,4 @@ while True:
 
     except zmq.Again as e:
         # If not received, do something else
-        print("No new message received yet")
+        # print("No new message received yet")

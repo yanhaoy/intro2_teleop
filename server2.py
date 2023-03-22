@@ -51,6 +51,6 @@ while True:
 
     message = cv.imencode(".jpg", img)[1].tolist()
 
-    print("server sends: the image at the topic: " + topic)
+    # print("server sends: the image at the topic: " + topic)
 
     socket.send(bytes(mogrify(topic, message), "utf-8"))

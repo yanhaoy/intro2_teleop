@@ -38,7 +38,7 @@ while True:
     try:
         res = socket.recv(flags=zmq.NOBLOCK)  # Asynchronous communication using noblock
         topic, message = demogrify(res.decode("utf-8"))
-        print("client receives: image at the topic: " + topic)
+        # print("client receives: image at the topic: " + topic)
         img = cv.imdecode(np.asarray(message, dtype="uint8"), cv.IMREAD_COLOR)
         cv.imshow("img", img)
 
@@ -46,4 +46,4 @@ while True:
 
     except zmq.Again as e:
         # If not received, do something else
-        print("No new message received yet")
+        # print("No new message received yet")
