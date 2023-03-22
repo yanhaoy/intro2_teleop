@@ -286,12 +286,12 @@ class NetworkInterface:
 
         self._video_thread = threading.Thread(
             target=self._stream_video_feed,
-            args=(f"tcp://*:{video_port_out}", perception_topic),
+            args=(f"tcp://{ip}:{video_port_out}", perception_topic),
         )
         self._video_thread.setDaemon(True)
 
         # Register a destructor to join the threads
-        atexit.register(self._stop)
+        atexit.register(self.stop)
 
     def start(self) -> None:
         """Start the network interface."""
@@ -299,7 +299,7 @@ class NetworkInterface:
         self._control_thread.start()
         self._video_thread.start()
 
-    def _stop(self) -> None:
+    def stop(self) -> None:
         """Stop the network interface."""
         self._running = False
         self._control_thread.join()
@@ -417,6 +417,12 @@ def get_args() -> Namespace:
         default=5557,
         help="The port that the video will be streamed on.",
     )
+    parser.add_argument(
+        "perception_topic",
+        type=str,
+        default="perception",
+        help="The topic that should be subscribed to for video feed.",
+    )
 
     return parser.parse_args()
 
@@ -440,7 +446,11 @@ def main() -> None:
 
     # Create a new control interface to process commands and stream video feed.
     control_interface = NetworkInterface(
-        args.ip, args.video_port, args.command_port, args.command_topic
+        args.ip,
+        args.video_port,
+        args.command_port,
+        args.command_topic,
+        args.perception_topic,
     )
     control_interface.start()
 
