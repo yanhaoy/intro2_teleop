@@ -76,5 +76,6 @@ while True:
         Board.setBusServoPulse(2, r, 500)
 
     except zmq.Again as e:
+        pass
         # If not received, do something else
         # print("No new message received yet")
