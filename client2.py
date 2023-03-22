@@ -34,7 +34,7 @@ topicfilter = "perception"  # This should match the server's topic name
 socket.setsockopt(zmq.SUBSCRIBE, bytes(topicfilter, "utf-8"))
 
 while True:
-    time.sleep(0.5)
+    time.sleep(1/30)
     try:
         res = socket.recv(flags=zmq.NOBLOCK)  # Asynchronous communication using noblock
         topic, message = demogrify(res.decode("utf-8"))

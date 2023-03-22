@@ -34,10 +34,10 @@ socket.connect(
 topicfilter = "control"  # This should match the server's topic name
 socket.setsockopt(zmq.SUBSCRIBE, bytes(topicfilter, "utf-8"))
 
-x, y, z = 0, 10, 10
+x, y, z, r, c = 0, 10, 10, 0, False
 
 while True:
-    time.sleep(0.01)
+    time.sleep(0.5)
     try:
         res = socket.recv(flags=zmq.NOBLOCK)  # Asynchronous communication using noblock
         topic, message = res.decode("utf-8").split()
@@ -51,14 +51,27 @@ while True:
             x -= 1
         elif message == "d":
             y += 1
-        elif message == "q":
+        elif message == "r":
             z += 1
-        elif message == "e":
+        elif message == "f":
             z -= 1
+        elif message == "q":
+            r += 1
+        elif message == "e":
+            r -= 1
+        elif message == "t":
+            c = True
+        elif message == "g":
+            c = False
         else:
             continue
 
-        AK.setPitchRangeMoving((x, y, z), -30, -30, -90, 1500)
+        AK.setPitchRangeMoving((x, y, z), -90, -30, -90, 1500)
+        if c:
+            Board.setBusServoPulse(1, 200, 500)
+        else:
+            Board.setBusServoPulse(1, 500, 500)
+        Board.setBusServoPulse(2, r, 500)
 
     except zmq.Again as e:
         # If not received, do something else

@@ -43,7 +43,7 @@ topic = "perception"  # This should match the server's topic name
 count = 0
 
 while True:
-    time.sleep(0.5)
+    time.sleep(1/30)
 
     img = my_camera.frame
     if img is None:
