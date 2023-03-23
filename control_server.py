@@ -3,12 +3,12 @@ import sys
 import time
 import pygame
 
-# initialising pygame
+# Initialize pygame
 pygame.init()
 pygame.joystick.init()
 joystick = pygame.joystick.Joystick(0)
 
-# creating display
+# Creat display
 display = pygame.display.set_mode((300, 300))
 
 # Set the port
@@ -25,13 +25,10 @@ socket.bind("tcp://*:%s" % port)
 # Set topic
 topic = "control"  # This should match the server's topic name
 
-count = 0
-
 while True:
     time.sleep(0.01)
 
-    # creating a loop to check events that
-    # are occurring
+    # Create a loop to check events that are occurring
     for event in pygame.event.get():
         message = None
 
@@ -39,43 +36,46 @@ while True:
             pygame.quit()
             sys.exit()
 
+        # Map joystick input to message
         if event.type == pygame.JOYAXISMOTION:
             if event.axis == 2 or event.axis == 5:
                 if event.value > 0.9:
                     if event.axis == 2:
-                        message = "q"
+                        message = "r_forward"
                     else:
-                        message = "e"
+                        message = "r_backward"
             elif abs(event.value) > 0.9:
                 if event.axis == 0:
                     if event.value > 0:
-                        message = "d"
+                        message = "y_forward"
                     else:
-                        message = "a"
+                        message = "y_backward"
                 elif event.axis == 1:
                     if event.value > 0:
-                        message = "s"
+                        message = "x_bakcward"
                     else:
-                        message = "w"
+                        message = "x_forward"
 
         if event.type == pygame.JOYHATMOTION:
             if event.value[1] == 1:
-                message = 'r'
+                message = "z_forward"
             elif event.value[1] == -1:
-                message = 'f'
+                message = "z_backward"
 
         if event.type == pygame.JOYBUTTONDOWN:
             if event.button == 0:
-                message = 't'
+                message = "c_open"
             elif event.button == 1:
-                message = 'g'
+                message = "c_close"
 
         if message is None:
             continue
 
+        # Print message
         print("server sends: " + message + " at the topic: " + topic, end="\r")
 
         # The full message is topic_space_message
         fullmessage = bytes(topic + " " + message, "utf-8")
 
+        # Send message
         socket.send(fullmessage)

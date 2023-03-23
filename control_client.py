@@ -26,16 +26,16 @@ if len(sys.argv) > 1:
 context = zmq.Context()
 socket = context.socket(zmq.SUB)
 socket.setsockopt(zmq.CONFLATE, 1)  # Take only the last element
-socket.connect(
-    "tcp://192.168.31.246:%s" % port
-)  # I hope this IP is constant, otherwise change it to your laptop's IP
+socket.connect("tcp://192.168.31.246:%s" % port)  # Laptop's IP
 
 # Set topic filter
 topicfilter = "control"  # This should match the server's topic name
 socket.setsockopt(zmq.SUBSCRIBE, bytes(topicfilter, "utf-8"))
 
+# Initial states
 x, y, z, r, c = 0, 10, 10, 500, False
 
+# Back to home position
 AK.setPitchRangeMoving((x, y, z), -90, -30, -90, 1500)
 if c:
     Board.setBusServoPulse(1, 200, 500)
@@ -48,33 +48,35 @@ while True:
     try:
         res = socket.recv(flags=zmq.NOBLOCK)  # Asynchronous communication using noblock
         topic, message = res.decode("utf-8").split()
-        # print("client receives: " + message + " at the topic: " + topic)
 
-        if message == "w":
+        # Map message to operation
+        if message == "x_forward":
             x += 1
-        elif message == "a":
+        elif message == "y_backward":
             y -= 1
-        elif message == "s":
+        elif message == "x_bakcward":
             x -= 1
-        elif message == "d":
+        elif message == "y_forward":
             y += 1
-        elif message == "r":
+        elif message == "z_forward":
             z += 1
-        elif message == "f":
+        elif message == "z_backward":
             z -= 1
-        elif message == "q":
+        elif message == "r_forward":
             r += 25
-        elif message == "e":
+        elif message == "r_backward":
             r -= 25
-        elif message == "t":
+        elif message == "c_open":
             c = True
-        elif message == "g":
+        elif message == "c_close":
             c = False
         else:
             continue
 
+        # Print states
         print("x: %d, y: %d, z: %d, rot: %d, claw: %r" % (x, y, z, r, c), end="\r")
 
+        # Control
         AK.setPitchRangeMoving((x, y, z), -90, -30, -90, 1500)
         if c:
             Board.setBusServoPulse(1, 200, 500)
@@ -84,5 +86,4 @@ while True:
 
     except zmq.Again as e:
         pass
-        # If not received, do something else
-        # print("No new message received yet")
+        # No message received

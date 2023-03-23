@@ -15,19 +15,14 @@ from CameraCalibration.CalibrationConfig import *
 import zmq
 import sys
 import time
-import json
 
 
-def mogrify(topic, msg):
-    """json encode the message and prepend the topic"""
-    return topic + " " + json.dumps(msg)
-
-
+# Init camera
 my_camera = Camera.Camera()
 my_camera.camera_open()
 
 # Set the port
-port = "5556"  # It should be fine to use the default
+port = "5557"  # It should be fine to use the default
 if len(sys.argv) > 1:
     port = sys.argv[1]
     int(port)
@@ -37,20 +32,16 @@ context = zmq.Context()
 socket = context.socket(zmq.PUB)
 socket.bind("tcp://*:%s" % port)
 
-# Set topic
-topic = "perception"  # This should match the server's topic name
-
-count = 0
-
 while True:
-    time.sleep(1/60)
+    time.sleep(1 / 60)
 
+    # Capture a frame
     img = my_camera.frame
     if img is None:
         continue
 
+    # Convert frame to message
     message = cv.imencode(".jpg", img)[1].tobytes()
 
-    # print("server sends: the image at the topic: " + topic)
-
+    # Send message
     socket.send(message)
