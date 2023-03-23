@@ -36,12 +36,19 @@ socket.setsockopt(zmq.SUBSCRIBE, bytes(topicfilter, "utf-8"))
 
 x, y, z, r, c = 0, 10, 10, 500, False
 
+AK.setPitchRangeMoving((x, y, z), -90, -30, -90, 1500)
+if c:
+    Board.setBusServoPulse(1, 200, 500)
+else:
+    Board.setBusServoPulse(1, 500, 500)
+Board.setBusServoPulse(2, r, 500)
+
 while True:
     time.sleep(0.5)
     try:
         res = socket.recv(flags=zmq.NOBLOCK)  # Asynchronous communication using noblock
         topic, message = res.decode("utf-8").split()
-        print("client receives: " + message + " at the topic: " + topic)
+        # print("client receives: " + message + " at the topic: " + topic)
 
         if message == "w":
             x += 1
@@ -56,9 +63,9 @@ while True:
         elif message == "f":
             z -= 1
         elif message == "q":
-            r += 10
+            r += 25
         elif message == "e":
-            r -= 10
+            r -= 25
         elif message == "t":
             c = True
         elif message == "g":
@@ -66,7 +73,7 @@ while True:
         else:
             continue
 
-        print("current state: ", x, y, z, r, c)
+        print("x: %d, y: %d, z: %d, rot: %d, claw: %r" % (x, y, z, r, c), end="\r")
 
         AK.setPitchRangeMoving((x, y, z), -90, -30, -90, 1500)
         if c:

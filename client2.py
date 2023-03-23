@@ -31,15 +31,15 @@ socket.connect(
 
 # Set topic filter
 topicfilter = "perception"  # This should match the server's topic name
-socket.setsockopt(zmq.SUBSCRIBE, bytes(topicfilter, "utf-8"))
+socket.setsockopt(zmq.SUBSCRIBE, bytes("", "utf-8"))
 
 while True:
-    time.sleep(1/30)
+    time.sleep(1/1000)
     try:
         res = socket.recv(flags=zmq.NOBLOCK)  # Asynchronous communication using noblock
-        topic, message = demogrify(res.decode("utf-8"))
+        # topic, message = demogrify(res.decode("utf-8"))
         # print("client receives: image at the topic: " + topic)
-        img = cv.imdecode(np.asarray(message, dtype="uint8"), cv.IMREAD_COLOR)
+        img = cv.imdecode(np.frombuffer(res, dtype="uint8"), cv.IMREAD_COLOR)
         cv.imshow("img", img)
 
         cv.waitKey(1)

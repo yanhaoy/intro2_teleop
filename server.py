@@ -73,7 +73,7 @@ while True:
         if message is None:
             continue
 
-        print("server sends: " + message + " at the topic: " + topic)
+        print("server sends: " + message + " at the topic: " + topic, end="\r")
 
         # The full message is topic_space_message
         fullmessage = bytes(topic + " " + message, "utf-8")

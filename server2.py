@@ -43,14 +43,14 @@ topic = "perception"  # This should match the server's topic name
 count = 0
 
 while True:
-    time.sleep(1/30)
+    time.sleep(1/60)
 
     img = my_camera.frame
     if img is None:
         continue
 
-    message = cv.imencode(".jpg", img)[1].tolist()
+    message = cv.imencode(".jpg", img)[1].tobytes()
 
     # print("server sends: the image at the topic: " + topic)
 
-    socket.send(bytes(mogrify(topic, message), "utf-8"))
+    socket.send(message)
